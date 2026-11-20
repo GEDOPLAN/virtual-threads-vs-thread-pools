@@ -1,0 +1,10 @@
+Datum:      2026-11-18T15:37:30+01:00
+Kernel:     Linux 6.18.33.2-microsoft-standard-WSL2
+Java:       openjdk version "25.0.5" 2026-10-20 LTS OpenJDK Runtime Environment Temurin-25.0.5+8 (build 25.0.5+8-LTS) 
+CPU:        11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz, 16 logische CPUs
+RAM:        19 GB
+somaxconn:  4096
+Ports:      32768 60999
+ulimit -n:  10240, ulimit -u: 79435
+threads-max: 158871
+Netzteil:   True

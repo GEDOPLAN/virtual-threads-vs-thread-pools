@@ -1,0 +1,43 @@
+# openjdk version "25.0.5" 2026-10-20 LTS, 16 CPUs, somaxconn=n/a
+# Netzteil: False
+# Max. CPU: 20 %
+=== Lauf 1
+Starte Tests...
+Platform-Pool (200 Threads)    11,17 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 2
+Starte Tests...
+Platform-Pool (200 Threads)    11,27 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 3
+Starte Tests...
+Platform-Pool (200 Threads)    11,31 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 4
+Starte Tests...
+Platform-Pool (200 Threads)    11,24 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 5
+Starte Tests...
+Platform-Pool (200 Threads)    11,34 Sekunden
+Virtual-Thread-Pool            3,04 Sekunden
+=== Lauf 6
+Starte Tests...
+Platform-Pool (200 Threads)    11,31 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 7
+Starte Tests...
+Platform-Pool (200 Threads)    11,81 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 8
+Starte Tests...
+Platform-Pool (200 Threads)    11,66 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 9
+Starte Tests...
+Platform-Pool (200 Threads)    11,45 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException
+=== Lauf 10
+Starte Tests...
+Platform-Pool (200 Threads)    11,29 Sekunden
+Exception in thread "main" java.util.concurrent.ExecutionException: java.net.ConnectException

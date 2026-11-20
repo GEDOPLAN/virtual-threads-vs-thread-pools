@@ -1,0 +1,43 @@
+# openjdk version "27.0.1.0.2" 2026-10-21, 16 CPUs, somaxconn=n/a
+# Netzteil: True
+# Max. CPU: 100 %
+=== Lauf 1
+Starte Tests...
+Platform-Pool (200 Threads)    10,34 Sekunden
+Virtual-Thread-Pool            1,37 Sekunden
+=== Lauf 2
+Starte Tests...
+Platform-Pool (200 Threads)    10,32 Sekunden
+Virtual-Thread-Pool            1,34 Sekunden
+=== Lauf 3
+Starte Tests...
+Platform-Pool (200 Threads)    10,29 Sekunden
+Virtual-Thread-Pool            1,27 Sekunden
+=== Lauf 4
+Starte Tests...
+Platform-Pool (200 Threads)    10,30 Sekunden
+Virtual-Thread-Pool            1,39 Sekunden
+=== Lauf 5
+Starte Tests...
+Platform-Pool (200 Threads)    10,29 Sekunden
+Virtual-Thread-Pool            1,28 Sekunden
+=== Lauf 6
+Starte Tests...
+Platform-Pool (200 Threads)    10,34 Sekunden
+Virtual-Thread-Pool            1,41 Sekunden
+=== Lauf 7
+Starte Tests...
+Platform-Pool (200 Threads)    10,31 Sekunden
+Virtual-Thread-Pool            1,28 Sekunden
+=== Lauf 8
+Starte Tests...
+Platform-Pool (200 Threads)    10,32 Sekunden
+Virtual-Thread-Pool            1,45 Sekunden
+=== Lauf 9
+Starte Tests...
+Platform-Pool (200 Threads)    10,30 Sekunden
+Virtual-Thread-Pool            1,31 Sekunden
+=== Lauf 10
+Starte Tests...
+Platform-Pool (200 Threads)    10,34 Sekunden
+Virtual-Thread-Pool            1,31 Sekunden
