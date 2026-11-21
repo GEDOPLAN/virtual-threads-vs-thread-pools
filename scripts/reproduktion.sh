@@ -18,18 +18,28 @@ if [ -z "$LABEL" ]; then
     *) uname -r | grep -qi microsoft && LABEL=wsl2 || LABEL=$(uname -s | tr 'A-Z' 'a-z') ;;
   esac
 fi
+# Netzbetrieb prüfen: im Akkubetrieb drosselt Windows die CPU
+# Leere Ausgabe (Abfrage gescheitert oder kein powershell.exe) wird zu "unbekannt"
+power=$(powershell.exe -NoProfile -Command '(Get-CimInstance -Namespace root/wmi -ClassName BatteryStatus).PowerOnline' 2>/dev/null | tr -d '\r')
+# Maximaler Leistungszustand des Prozessors im Netzbetrieb: unter 100 % schaltet Windows den Turbo Boost ab
+maxcpu=$(MSYS_NO_PATHCONV=1 powercfg.exe /query SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 2>/dev/null \
+  | grep -iE 'Wechselstromeinstellung|AC Power Setting Index' | grep -o '0x[0-9a-fA-F]*')
+[ -n "$maxcpu" ] && maxcpu="$((maxcpu)) %"
+# Wie in umgebung.sh: In WSL2 und unter Windows ist eine Messung ohne belegten Netzbetrieb
+# und Leistungszustand nicht verwertbar. In WSL2 meist ausgefallenes WSL-Interop
+# ("Exec format error" bei powercfg.exe); hilft "wsl --shutdown" unter Windows.
+case "$LABEL" in
+  wsl2|windows*)
+    if [ -z "$power" ] || [ -z "$maxcpu" ]; then
+      echo "Netzteil oder Max. CPU unbekannt, Messung abgebrochen" >&2
+      exit 1
+    fi ;;
+esac
 out=results/reproduktion-$LABEL-$(date +%Y%m%d-%H%M%S).txt
 mkdir -p results
 {
   echo "# $("$JAVA" -version 2>&1 | head -1), $(nproc) CPUs, somaxconn=$(cat /proc/sys/net/core/somaxconn 2>/dev/null || echo n/a)"
-  # Netzbetrieb prüfen: im Akkubetrieb drosselt Windows die CPU
-  # Leere Ausgabe (Abfrage gescheitert oder kein powershell.exe) wird zu "unbekannt"
-  power=$(powershell.exe -NoProfile -Command '(Get-CimInstance -Namespace root/wmi -ClassName BatteryStatus).PowerOnline' 2>/dev/null | tr -d '\r')
   echo "# Netzteil: ${power:-unbekannt}"
-  # Maximaler Leistungszustand des Prozessors im Netzbetrieb: unter 100 % schaltet Windows den Turbo Boost ab
-  maxcpu=$(MSYS_NO_PATHCONV=1 powercfg.exe /query SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 2>/dev/null \
-    | grep -iE 'Wechselstromeinstellung|AC Power Setting Index' | grep -o '0x[0-9a-fA-F]*')
-  [ -n "$maxcpu" ] && maxcpu="$((maxcpu)) %"
   echo "# Max. CPU: ${maxcpu:-unbekannt}"
   for i in $(seq 1 "$runs"); do
     echo "=== Lauf $i"
