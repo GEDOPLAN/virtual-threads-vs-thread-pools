@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.LongAdder;
 public class LoadClient {
 
   static void main(String[] args) throws Exception {
+    BenchmarkRunner.exitOnUncaughtException();
     int port = Integer.parseInt(args[0]);
     String pool = args[1];
     int requests = Integer.parseInt(args[2]);
@@ -68,21 +69,28 @@ public class LoadClient {
       ExecutorService executor = newPool(pool);
       long start = System.nanoTime();
       List<Future<?>> futures = new ArrayList<>(requests);
-      for (int i = 0; i < requests; i++) {
-        futures.add(executor.submit(() -> {
-          maxInFlight.accumulateAndGet(inFlight.incrementAndGet(), Math::max);
-          try {
-            int status = sender.send();
-            if (status != 200) {
-              errors.computeIfAbsent("HTTP-" + status, _ -> new LongAdder()).increment();
+      try {
+        for (int i = 0; i < requests; i++) {
+          futures.add(executor.submit(() -> {
+            maxInFlight.accumulateAndGet(inFlight.incrementAndGet(), Math::max);
+            try {
+              int status = sender.send();
+              if (status != 200) {
+                errors.computeIfAbsent("HTTP-" + status, _ -> new LongAdder()).increment();
+              }
+            } catch (Exception e) {
+              errors.computeIfAbsent(e.getClass().getSimpleName(), _ -> new LongAdder()).increment();
+              firstErrors.putIfAbsent(e.getClass().getSimpleName(), e);
+            } finally {
+              inFlight.decrementAndGet();
             }
-          } catch (Exception e) {
-            errors.computeIfAbsent(e.getClass().getSimpleName(), _ -> new LongAdder()).increment();
-            firstErrors.putIfAbsent(e.getClass().getSimpleName(), e);
-          } finally {
-            inFlight.decrementAndGet();
-          }
-        }));
+          }));
+        }
+      } catch (Throwable e) {
+        // Startet kein Pool-Thread mehr, sofort beenden: Das Schließen des HttpClient am Ende
+        // des try-Blocks würde auf die laufenden Requests warten, und die hängen, wenn auch
+        // der HttpClient keine Threads mehr bekommt
+        BenchmarkRunner.abort(e);
       }
       // Bei newFixedThreadPool enthält die Submit-Schleife das Erzeugen der Pool-Threads
       long submitted = System.nanoTime();

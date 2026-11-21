@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 public class ThreadCost {
 
   static void main(String[] args) throws Exception {
+    BenchmarkRunner.exitOnUncaughtException();
     String kind = args[0];
     int count = Integer.parseInt(args[1]);
     Thread.Builder builder = switch (kind) {

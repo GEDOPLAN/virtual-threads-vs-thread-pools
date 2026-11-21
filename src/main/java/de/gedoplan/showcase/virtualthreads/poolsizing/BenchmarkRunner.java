@@ -170,6 +170,20 @@ public class BenchmarkRunner {
     }
   }
 
+  /// Für die Mess-JVMs ([ThreadCost], [LoadClient]): Bricht `main` mit einem Fehler ab, z. B.
+  /// weil ab einer Grenze des Betriebssystems keine Threads mehr starten, endet die JVM sofort.
+  /// Sonst wartet sie auf die schon gestarteten Threads, die nie fertig werden, und der Runner
+  /// wartet ewig auf sie.
+  static void exitOnUncaughtException() {
+    Thread.currentThread().setUncaughtExceptionHandler((_, e) -> abort(e));
+  }
+
+  /// Gibt den Fehler aus und beendet die JVM, ohne auf andere Threads zu warten.
+  static void abort(Throwable e) {
+    e.printStackTrace();
+    System.exit(1);
+  }
+
   private static Process startServer(String serverType) throws IOException {
     List<String> command = new ArrayList<>(List.of(JAVA, "-cp", CLASSPATH));
     command.addAll(switch (serverType) {
