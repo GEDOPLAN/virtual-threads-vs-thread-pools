@@ -15,6 +15,13 @@ mkdir -p results
   echo "Ports:      $(cat /proc/sys/net/ipv4/ip_local_port_range | xargs)"
   echo "ulimit -n:  $(ulimit -n), ulimit -u: $(ulimit -u)"
   echo "threads-max: $(cat /proc/sys/kernel/threads-max)"
+  # Höchstzahl Threads in der cgroup dieser Shell, mit systemd standardmäßig 15 % von threads-max.
+  # Liegt sie unter 10.000, bricht die Messung bei 10.000 Platform-Threads ab.
+  # Pfad unter cgroup v2 (Zeile "0::") oder v1 (Controller "pids")
+  v2=$(awk -F: '$1 == "0" { print $3 }' /proc/self/cgroup)
+  v1=$(awk -F: '$2 ~ /(^|,)pids(,|$)/ { print $3 }' /proc/self/cgroup)
+  pids=$(cat "/sys/fs/cgroup$v2/pids.max" 2>/dev/null || cat "/sys/fs/cgroup/pids$v1/pids.max" 2>/dev/null)
+  echo "pids.max:   ${pids:-n/a}"
   # Netzbetrieb prüfen: im Akkubetrieb drosselt Windows die CPU
   # Leere Ausgabe (Abfrage gescheitert oder kein powershell.exe) wird zu "unbekannt"
   power=$(powershell.exe -NoProfile -Command '(Get-CimInstance -Namespace root/wmi -ClassName BatteryStatus).PowerOnline' 2>/dev/null | tr -d '\r')
