@@ -43,8 +43,11 @@ public class ThreadCost {
     running.await();
     long allRunning = System.nanoTime();
 
-    // Nach GC enthält der belegte Heap nur noch lebende Objekte, also auch die
-    // Stacks der geparkten Virtual Threads
+    // System.gc() verspricht laut Javadoc nichts. In HotSpot löst es aber eine volle GC aus
+    // (GC Tuning Guide, Abschnitt „Explicit Garbage Collection“), sofern nicht mit
+    // -XX:+DisableExplicitGC abgeschaltet. Danach zählt der belegte Heap nur erreichbare
+    // Objekte: die Thread-Objekte und bei Virtual Threads zusätzlich ihre auf den Heap
+    // ausgelagerten Stacks
     System.gc();
     var during = MemorySnapshot.take();
 
