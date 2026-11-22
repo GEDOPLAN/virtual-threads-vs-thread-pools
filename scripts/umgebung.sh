@@ -23,8 +23,9 @@ mkdir -p results
   pids=$(cat "/sys/fs/cgroup$v2/pids.max" 2>/dev/null || cat "/sys/fs/cgroup/pids$v1/pids.max" 2>/dev/null)
   echo "pids.max:   ${pids:-n/a}"
   # Netzbetrieb prüfen: im Akkubetrieb drosselt Windows die CPU
+  # Ohne Akku (Desktop-PC) "kein Akku", das gilt wie Netzbetrieb.
   # Leere Ausgabe (Abfrage gescheitert oder kein powershell.exe) wird zu "unbekannt"
-  power=$(powershell.exe -NoProfile -Command '(Get-CimInstance -Namespace root/wmi -ClassName BatteryStatus).PowerOnline' 2>/dev/null | tr -d '\r')
+  power=$(powershell.exe -NoProfile -Command 'if (Get-CimInstance -ClassName Win32_Battery -ErrorAction SilentlyContinue) { (Get-CimInstance -Namespace root/wmi -ClassName BatteryStatus).PowerOnline } else { "kein Akku" }' 2>/dev/null | tr -d '\r')
   echo "Netzteil:   ${power:-unbekannt}"
   # Maximaler Leistungszustand des Prozessors im Netzbetrieb: unter 100 % schaltet Windows den Turbo Boost ab
   maxcpu=$(powercfg.exe /query SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 2>/dev/null \

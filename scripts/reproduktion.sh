@@ -19,8 +19,9 @@ if [ -z "$LABEL" ]; then
   esac
 fi
 # Netzbetrieb prüfen: im Akkubetrieb drosselt Windows die CPU
+# Ohne Akku (Desktop-PC) "kein Akku", das gilt wie Netzbetrieb.
 # Leere Ausgabe (Abfrage gescheitert oder kein powershell.exe) wird zu "unbekannt"
-power=$(powershell.exe -NoProfile -Command '(Get-CimInstance -Namespace root/wmi -ClassName BatteryStatus).PowerOnline' 2>/dev/null | tr -d '\r')
+power=$(powershell.exe -NoProfile -Command 'if (Get-CimInstance -ClassName Win32_Battery -ErrorAction SilentlyContinue) { (Get-CimInstance -Namespace root/wmi -ClassName BatteryStatus).PowerOnline } else { "kein Akku" }' 2>/dev/null | tr -d '\r')
 # Maximaler Leistungszustand des Prozessors im Netzbetrieb: unter 100 % schaltet Windows den Turbo Boost ab
 maxcpu=$(MSYS_NO_PATHCONV=1 powercfg.exe /query SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 2>/dev/null \
   | grep -iE 'Wechselstromeinstellung|AC Power Setting Index' | grep -o '0x[0-9a-fA-F]*')
