@@ -25,6 +25,9 @@ class BenchmarkRunnerOptionsTest {
       load    | client=defualt    | Unbekannter Wert für client: defualt
       load    | server=tomcat     | Unbekannter Wert für server: tomcat
       threads | delays=1          | Unbekannter Parameter: delays
+      load    | requests=2000,abc | Keine positive ganze Zahl für requests: abc
+      threads | counts=0          | Keine positive ganze Zahl für counts: 0
+      threads | reps=1,2          | Keine positive ganze Zahl für reps: 1,2
       """)
   void rejectsInvalidOptions(String mode, String option, String message) {
     var e = assertThrows(IllegalArgumentException.class, () -> BenchmarkRunner.parse(new String[] { mode, option }));

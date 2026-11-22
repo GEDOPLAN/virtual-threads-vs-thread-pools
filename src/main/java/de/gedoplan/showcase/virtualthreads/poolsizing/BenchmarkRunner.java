@@ -47,7 +47,8 @@ import java.util.Set;
 /// die Ergebnisse lässt sich mit `-Dresults.dir=<verzeichnis>` angeben (für die Tests).
 public class BenchmarkRunner {
 
-  private static final String JAVA = ProcessHandle.current().info().command().orElse("java");
+  // Dasselbe JDK wie der Runner, nicht das erste java im PATH
+  private static final String JAVA = Path.of(System.getProperty("java.home"), "bin", "java").toString();
   private static final String CLASSPATH = System.getProperty("java.class.path");
 
   private static final Set<String> COMMON_OPTIONS = Set.of("reps", "nmt");
@@ -85,14 +86,14 @@ public class BenchmarkRunner {
     };
     Map<String, String> opts = parseOptions(Arrays.copyOfRange(args, 1, args.length), modeOptions);
     return new Settings(mode,
-        Integer.parseInt(opts.getOrDefault("reps", "10")),
+        positive(opts.getOrDefault("reps", "10"), "reps"),
         values(opts.getOrDefault("nmt", "on"), "nmt", Set.of("on", "off")),
-        list(opts.getOrDefault("requests", "2000,10000")),
+        numbers(opts.getOrDefault("requests", "2000,10000"), "requests"),
         list(opts.getOrDefault("delays", "0,0.1,1")),
         pools(opts.getOrDefault("pools", "platform:200,platform:2000,platform:10000,virtual")),
         values(opts.getOrDefault("client", "default"), "client", Set.of("default", "virtual", "socket")),
         values(opts.getOrDefault("server", "jdk"), "server", Set.of("jdk", "jdk-close", "socket")),
-        list(opts.getOrDefault("counts", "200,2000,10000")));
+        numbers(opts.getOrDefault("counts", "200,2000,10000"), "counts"));
   }
 
   /// Liest die Parameter `key=value`. Bricht bei unbekannten Schlüsseln ab, damit ein
@@ -268,6 +269,22 @@ public class BenchmarkRunner {
       }
     }
     return values;
+  }
+
+  /// Kommagetrennte Liste positiver ganzer Zahlen. Die Werte bleiben Strings, wie sie in die
+  /// CSV und an die Mess-JVMs gehen; geprüft wird hier, damit ein Fehler vor der Messung auffällt.
+  private static List<String> numbers(String value, String key) {
+    List<String> numbers = list(value);
+    numbers.forEach(n -> positive(n, key));
+    return numbers;
+  }
+
+  private static int positive(String value, String key) {
+    // Höchstens 9 Stellen, damit der Wert sicher in ein int passt
+    if (!value.matches("[1-9]\\d{0,8}")) {
+      throw new IllegalArgumentException("Keine positive ganze Zahl für " + key + ": " + value);
+    }
+    return Integer.parseInt(value);
   }
 
   private static List<String> pools(String value) {
