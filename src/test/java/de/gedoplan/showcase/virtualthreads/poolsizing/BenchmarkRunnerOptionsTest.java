@@ -50,7 +50,7 @@ class BenchmarkRunnerOptionsTest {
     assertEquals(List.of("0", "0.1", "1"), settings.delays());
     assertEquals(List.of("platform:200", "platform:2000", "platform:10000", "virtual"), settings.pools());
     assertEquals(List.of("default"), settings.clients());
-    assertEquals(List.of("jdk"), settings.servers());
+    assertEquals(List.of(BenchmarkRunner.Server.JDK), settings.servers());
     assertEquals(List.of("200", "2000", "10000"), settings.counts());
   }
 

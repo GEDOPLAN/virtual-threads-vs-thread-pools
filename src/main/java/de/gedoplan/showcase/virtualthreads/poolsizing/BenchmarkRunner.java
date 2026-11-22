@@ -58,7 +58,35 @@ public class BenchmarkRunner {
   /// Einstellungen einer Messreihe, aus den Aufrufparametern gelesen und geprüft. Die Werte
   /// des jeweils anderen Modus bleiben auf ihren Standardwerten und werden nicht benutzt.
   record Settings(String mode, int reps, List<String> nmtModes, List<String> requests, List<String> delays,
-      List<String> pools, List<String> clients, List<String> servers, List<String> counts) {
+      List<String> pools, List<String> clients, List<Server> servers, List<String> counts) {
+  }
+
+  /// Server im Modus `load` mit Hauptklasse und Argumenten. `key` ist der Wert im Parameter
+  /// `server` und in der CSV.
+  enum Server {
+    JDK("jdk", DelayServer.class),
+    JDK_CLOSE("jdk-close", DelayServer.class, "close"),
+    SOCKET("socket", SocketDelayServer.class);
+
+    final String key;
+    final List<String> mainClassAndArgs;
+
+    Server(String key, Class<?> mainClass, String... args) {
+      this.key = key;
+      var command = new ArrayList<>(List.of(mainClass.getName()));
+      command.addAll(List.of(args));
+      this.mainClassAndArgs = List.copyOf(command);
+    }
+
+    static Server of(String key) {
+      for (Server server : values()) {
+        if (server.key.equals(key)) {
+          return server;
+        }
+      }
+      throw new IllegalArgumentException("Unbekannter Wert für server: " + key + ", erlaubt: "
+          + Arrays.stream(values()).map(s -> s.key).toList());
+    }
   }
 
   static void main(String[] args) throws Exception {
@@ -92,7 +120,7 @@ public class BenchmarkRunner {
         list(opts.getOrDefault("delays", "0,0.1,1")),
         pools(opts.getOrDefault("pools", "platform:200,platform:2000,platform:10000,virtual")),
         values(opts.getOrDefault("client", "default"), "client", Set.of("default", "virtual", "socket")),
-        values(opts.getOrDefault("server", "jdk"), "server", Set.of("jdk", "jdk-close", "socket")),
+        list(opts.getOrDefault("server", "jdk")).stream().map(Server::of).toList(),
         numbers(opts.getOrDefault("counts", "200,2000,10000"), "counts"));
   }
 
@@ -114,12 +142,12 @@ public class BenchmarkRunner {
   }
 
   private static void runLoad(int reps, List<String> nmtModes, List<String> requests, List<String> delays, List<String> pools,
-      List<String> clients, List<String> servers) throws Exception {
+      List<String> clients, List<Server> servers) throws Exception {
     try (var csv = csvWriter("load")) {
       boolean header = true;
       // Wiederholungen außen, damit Drift (z. B. Temperatur) alle Varianten gleich trifft
       for (int rep = 1; rep <= reps; rep++) {
-        for (String serverType : servers) {
+        for (Server serverType : servers) {
           for (String client : clients) {
             for (String n : requests) {
               for (String delay : delays) {
@@ -129,12 +157,12 @@ public class BenchmarkRunner {
                     try {
                       int port = readPort(server);
                       var result = runJvm(LoadClient.class, nmtMode, String.valueOf(port), pool, n, delay, client);
-                      result.put("server", serverType);
+                      result.put("server", serverType.key);
                       result.put("rep", String.valueOf(rep));
                       write(csv, result, header);
                       header = false;
                       System.out.printf("[%d/%d] %-16s n=%-6s delay=%-4s client=%-8s server=%-6s nmt=%-3s %6s ms  maxInFlight=%-6s connections=%-6s passiveOpens=%-6s errors=%s%n",
-                          rep, reps, pool, n, delay, client, serverType, nmtMode, result.get("durationMs"),
+                          rep, reps, pool, n, delay, client, serverType.key, nmtMode, result.get("durationMs"),
                           result.get("maxInFlight"), result.get("connections"), result.get("passiveOpens"), result.get("errors"));
                     } finally {
                       server.destroy();
@@ -185,14 +213,9 @@ public class BenchmarkRunner {
     System.exit(1);
   }
 
-  private static Process startServer(String serverType) throws IOException {
+  private static Process startServer(Server serverType) throws IOException {
     List<String> command = new ArrayList<>(List.of(JAVA, "-cp", CLASSPATH));
-    command.addAll(switch (serverType) {
-      case "jdk" -> List.of(DelayServer.class.getName());
-      case "jdk-close" -> List.of(DelayServer.class.getName(), "close");
-      case "socket" -> List.of(SocketDelayServer.class.getName());
-      default -> throw new IllegalArgumentException("Unbekannter Server: " + serverType);
-    });
+    command.addAll(serverType.mainClassAndArgs);
     return new ProcessBuilder(command)
         .redirectError(ProcessBuilder.Redirect.INHERIT)
         .start();
