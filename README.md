@@ -12,6 +12,7 @@ gehen an einen lokalen Server, der nach einer einstellbaren Verzögerung antwort
 | Pfad | Inhalt |
 |---|---|
 | `src/main/java/.../poolsizing/` | Messaufbau: `BenchmarkRunner` startet jede Messung in eigenen JVMs (`DelayServer` bzw. `SocketDelayServer` als Server, `LoadClient` für Requests, `ThreadCost` für die Kosten wartender Threads) |
+| `src/main/java/.../poolsizing/SemaphoreDemo.java` | das `Semaphore`-Beispiel aus dem Beitrag zum Ausführen |
 | `src/main/java/.../VirtualThreadsDemo.java` | die einfache Demo aus dem Überblicksartikel [Von Java 17 zu Java 25](https://gedoplan.de/von-java-17-zu-java-25-espresso-oder-kalter-kaffee/), unverändert |
 | `scripts/` | Messskripte und die Auswertung |
 | `results/` | Ergebnisdateien der Messungen im Beitrag, zusammengefasst in [`results/ERGEBNISSE.md`](results/ERGEBNISSE.md) |
@@ -65,6 +66,19 @@ java scripts/Auswertung.java
 
 erzeugt die Tabellen in `results/ERGEBNISSE.md` neu. Welche Ergebnisdateien gelten, steht als
 Konstanten am Anfang von `scripts/Auswertung.java`. Eigene Messungen dort eintragen.
+
+## Semaphore-Beispiel
+
+Nach `mvn compile` schickt
+
+```bash
+java -cp target/classes de.gedoplan.showcase.virtualthreads.poolsizing.SemaphoreDemo
+```
+
+1.000 Requests an einen Server mit 1 Sekunde Antwortzeit, davon höchstens 50 gleichzeitig.
+Die Ausgabe zeigt, wie viele Requests der Server tatsächlich gleichzeitig bearbeitet hat und
+wie lange alles gedauert hat (Little's Law erwartet 20 Sekunden). Server und Client laufen in
+derselben JVM, die Skripte werden nicht gebraucht, das Beispiel läuft also auch unter Windows.
 
 ## Tests
 
